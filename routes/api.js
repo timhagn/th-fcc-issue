@@ -69,7 +69,7 @@ module.exports = function (app) {
   function createIssue(project_name, issue) {
     return new Promise((resolve, reject) => {
       let newIssue = {
-        project_name,
+        project_name: project_name,
         ...issue
       };
       let issueToSave = new Issue(newIssue);
@@ -100,6 +100,14 @@ module.exports = function (app) {
   }
 
   app.use(helmet());
+
+  app.route('/api/issues/:project/drop')
+      .get((req, res) => {
+        let project = req.params.project;
+        Issue.deleteMany( { project_name: project } )
+            .exec()
+            .then(res.redirect('/'))
+      });
 
   app.route('/api/issues/:project')
     .get(async function (req, res) {
@@ -137,13 +145,13 @@ module.exports = function (app) {
     .put(async function (req, res) {
       let project = req.params.project;
       if (req.body._id) {
-        // TODO: fix this -.-
         let updateObject = {};
-        Object.keys(req.body).map((item, value) => {
-          if (item !== '_id')
-            updateObject[item] = value;
+        Object.keys(req.body).forEach((key, index) => {
+          if (key !== '_id') updateObject[key] = req.body[key];
+          if (key === 'open' && req.body[key] === "false") updateObject[key] = false;
+          if (key === 'open' && req.body[key] === "true") updateObject[key] = true;
         });
-        updateObject.updated_on = Date.now();
+        updateObject.updated_on = new Date();
         updateObject.project_name = project;
         let updated = await findIssueByIdAndUpdate(req.body._id, updateObject);
         if (updated) {
@@ -162,11 +170,7 @@ module.exports = function (app) {
       let project = req.params.project;
       // Shall all issues be deleted?
       let id = req.body._id;
-      if (id === 'delall') {
-        Issue.deleteMany({});
-        res.json({ success: 'deleted *' });
-      }
-      else if (id) {
+      if (id) {
         // Do we at least have an valid _id?
         // Then try to delete issue or return error.
         let deletedIssue = await deleteIssueById(id);
@@ -181,4 +185,5 @@ module.exports = function (app) {
         res.json({error: '_id error'})
       }
     });
+
 };

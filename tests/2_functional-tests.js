@@ -14,7 +14,7 @@ var server = require('../server');
 chai.use(chaiHttp);
 
 // Global variable to "remember" an existing _id.
-let preSavedId;
+let preSavedIdFull, preSavedIdPartial;
 
 suite('Functional Tests', function() {
   
@@ -43,6 +43,8 @@ suite('Functional Tests', function() {
           assert.property(res.body, 'open');
           assert.property(res.body, 'status_text');
           assert.property(res.body, '_id');
+          // Save _id for later testing.
+          preSavedIdFull = res.body._id;
           done();
         });
       });
@@ -68,7 +70,7 @@ suite('Functional Tests', function() {
             assert.property(res.body, 'status_text');
             assert.property(res.body, '_id');
             // Save _id for later testing.
-            preSavedId = res.body._id;
+            preSavedIdPartial = res.body._id;
             done();
           });
       });
@@ -108,7 +110,7 @@ suite('Functional Tests', function() {
         chai.request(server)
           .put('/api/issues/test')
           .send({
-            _id: preSavedId,
+            _id: preSavedIdFull,
             created_by: 'Functional Test - One field to update',
           })
           .end(function(err, res){
@@ -124,9 +126,9 @@ suite('Functional Tests', function() {
         chai.request(server)
           .put('/api/issues/test')
           .send({
-            _id: preSavedId,
+            _id: preSavedIdPartial,
             issue_title: 'Title',
-            issue_text: 'text',
+            issue_text: 'Was Partial Test',
             created_by: 'Functional Test - Multiple fields to update',
             assigned_to: 'Chai and Mocha',
             status_text: 'In QA'
@@ -140,7 +142,7 @@ suite('Functional Tests', function() {
           });
       });
       
-    }.bind(preSavedId));
+    });
     
     suite('GET /api/issues/{project} => Array of objects with issue data', function() {
       
@@ -229,11 +231,11 @@ suite('Functional Tests', function() {
       test('Valid _id', function(done) {
         chai.request(server)
           .delete('/api/issues/test')
-          .send({ _id: preSavedId })
+          .send({ _id: preSavedIdFull })
           .end(function(err, res){
             assert.isObject(res.body);
             assert.property(res.body, 'success');
-            assert.equal(res.body.success, 'deleted '+ preSavedId);
+            assert.equal(res.body.success, 'deleted '+ preSavedIdFull);
             done();
           });
       });

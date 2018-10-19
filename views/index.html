@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Welcome to HyperDev!</title>
+    <title>fcc - Issue Tracker Project</title>
     <meta name="description" content="A cool thing made with HyperDev">
     <link id="favicon" rel="icon" href="https://hyperdev.com/favicon-app.ico" type="image/x-icon">
     <meta charset="utf-8">
@@ -74,7 +74,7 @@
       $(function() {
         $('#testForm').submit(function(e) {
           $.ajax({
-            url: '/api/issues/api',
+            url: '/api/issues/test',
             type: 'post',
             data: $('#testForm').serialize(),
             success: function(data) {
@@ -85,7 +85,7 @@
         });
         $('#testForm2').submit(function(e) {
           $.ajax({
-            url: '/api/issues/api',
+            url: '/api/issues/test',
             type: 'put',
             data: $('#testForm2').serialize(),
             success: function(data) {
@@ -96,7 +96,7 @@
         });
         $('#testForm3').submit(function(e) {
           $.ajax({
-            url: '/api/issues/api',
+            url: '/api/issues/test',
             type: 'delete',
             data: $('#testForm3').serialize(),
             success: function(data) {
