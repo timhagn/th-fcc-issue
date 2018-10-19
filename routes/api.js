@@ -46,10 +46,10 @@ const helmet = require('helmet');
 module.exports = function (app) {
 
   // Async function to get filtered Issues.
-  function getFilteredIssues(filters) {
+  function getFilteredIssues(project_name, filters) {
     return new Promise((resolve, reject) => {
       Issue.find(
-          {filters},
+          {project_name, ...filters},
           (err, issue) => err ? reject(null) : resolve(issue)
       );
     });
@@ -68,17 +68,18 @@ module.exports = function (app) {
   // Async function to Create an Issue.
   function createIssue(project_name, issue) {
     return new Promise((resolve, reject) => {
-      const issueToSave = new Issue({
+      let newIssue = {
         project_name,
         ...issue
-      });
+      };
+      let issueToSave = new Issue(newIssue);
       issueToSave.save((err, data) =>
           err ? reject(null) : resolve(data));
     });
   }
 
   // Async function to get Issue by _id and update.
-  function findIssueByIdAndUpdate(id, values = {}) {
+  function findIssueByIdAndUpdate(id, values) {
     return new Promise((resolve, reject) => {
       Issue.updateOne(
           { _id: id },
@@ -103,12 +104,12 @@ module.exports = function (app) {
   app.route('/api/issues/:project')
     .get(async function (req, res) {
       let project = req.params.project;
-      if (Object.keys(req.body).length < 1) {
-        const unfiltered = await getAllIssuesByProject(project);
+      if (Object.keys(req.query).length === 0) {
+        let unfiltered = await getAllIssuesByProject(project);
         res.json(unfiltered);
       }
       else {
-        const filtered = await getFilteredIssues(req.body);
+        let filtered = await getFilteredIssues(project, req.query);
         res.json(filtered);
       }
     })
@@ -120,8 +121,8 @@ module.exports = function (app) {
             issue_text,
             created_by } = req.body;
       if (issue_title && issue_text && created_by ) {
-        const created = await createIssue(project, req.body);
-        if (created) {
+        let created = await createIssue(project, req.body);
+        if (created !== null) {
           res.send(created);
         }
         else {
@@ -136,13 +137,15 @@ module.exports = function (app) {
     .put(async function (req, res) {
       let project = req.params.project;
       if (req.body._id) {
+        // TODO: fix this -.-
         let updateObject = {};
-        Array(req.body).map((item) => {
+        Object.keys(req.body).map((item, value) => {
           if (item !== '_id')
-            updateObject[item] = item;
+            updateObject[item] = value;
         });
-        updateObject.updated_on = new Date();
-        const updated = await findIssueByIdAndUpdate(req.body._id, updateObject);
+        updateObject.updated_on = Date.now();
+        updateObject.project_name = project;
+        let updated = await findIssueByIdAndUpdate(req.body._id, updateObject);
         if (updated) {
           res.json({ success: 'successfully updated' });
         }
@@ -166,7 +169,7 @@ module.exports = function (app) {
       else if (id) {
         // Do we at least have an valid _id?
         // Then try to delete issue or return error.
-        const deletedIssue = await deleteIssueById(id);
+        let deletedIssue = await deleteIssueById(id);
         if (deletedIssue) {
           res.json({success: 'deleted ' + id})
         }

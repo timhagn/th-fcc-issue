@@ -43,8 +43,6 @@ suite('Functional Tests', function() {
           assert.property(res.body, 'open');
           assert.property(res.body, 'status_text');
           assert.property(res.body, '_id');
-          // Save _id for later testing.
-          preSavedId = res.body._id;
           done();
         });
       });
@@ -69,6 +67,8 @@ suite('Functional Tests', function() {
             assert.property(res.body, 'open');
             assert.property(res.body, 'status_text');
             assert.property(res.body, '_id');
+            // Save _id for later testing.
+            preSavedId = res.body._id;
             done();
           });
       });
@@ -192,7 +192,6 @@ suite('Functional Tests', function() {
             .query({
               issue_title: 'Title',
               issue_text: 'text',
-              created_by: 'Functional Test - Multiple fields to update',
               assigned_to: 'Chai and Mocha',
               status_text: 'In QA'
             })
